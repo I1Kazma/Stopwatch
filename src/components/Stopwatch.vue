@@ -53,37 +53,41 @@ export default {
     methods: {
 
         StopwatchStart() {
+            this.startTime = performance.now();
             this.isStopwatchStart = true;
             this.isStopwatchStop = false;
             this.UIStyle.color = 'white';
             this.lineStyle.background = 'white';
-            this.timer = setInterval(() => {
-                this.seconds++
-                if (this.seconds === 60) {
-                    this.minutes++
-                    this.seconds = 0
-                    this.showMinutes = true
-                }
-                if (this.minutes === 60) {
-                    this.hours++
-                    this.minutes = 0
-                    this.showHours = true
-                }
-                this.time =
-                    (this.showHours ? (this.hours > 9 ? this.hours : '0' + this.hours) + ':' : '') +
-                    (this.showMinutes ? (this.minutes > 9 ? this.minutes : '0' + this.minutes) + ':' : '') +
-                    (this.seconds > 9 ? this.seconds : '0' + this.seconds)
-            }, 1000)
+            this.updateStopwatch();
         },
+        updateStopwatch() {
+            this.timer = requestAnimationFrame(() => {
+                const elapsed = performance.now() - this.startTime;
+                const seconds = Math.floor(elapsed / 1000);
+                const minutes = Math.floor(seconds / 60);
+                const hours = Math.floor(minutes / 60);
 
+                this.seconds = seconds % 60;
+                this.minutes = minutes % 60;
+                this.hours = hours;
+
+                this.time =
+                    (this.hours > 9 ? this.hours : '0' + this.hours) + ':' +
+                    (this.minutes > 9 ? this.minutes : '0' + this.minutes) + ':' +
+                    (this.seconds > 9 ? this.seconds : '0' + this.seconds);
+
+                if (this.isStopwatchStart) {
+                    this.updateStopwatch();
+                }
+            });
+        },
         StopwatchPause() {
-            clearInterval(this.timer)
+            cancelAnimationFrame(this.timer);
             this.UIStyle.color = '#9E9E9E';
             this.lineStyle.background = '#9E9E9E';
             this.isStopwatchStart = false;
             this.isStopwatchStop = true;
         },
-
         StopwatchReset() {
             this.seconds = 0
             this.minutes = 0
@@ -93,7 +97,7 @@ export default {
             this.showHours = false
             this.UIStyle.color = '#9E9E9E';
             this.lineStyle.background = '#9E9E9E';
-            clearInterval(this.timer)
+            cancelAnimationFrame(this.timer);
             this.isStopwatchStart = false;
             this.isStopwatchStop = true;
         },
